@@ -19,14 +19,14 @@ export default function AboutPage({ about }: AboutProps) {
           <>
             <h2 className="text-3xl font-bold mb-4">{about.title}</h2>
 
-            {about.heroImageUrl && (
+            {about.heroImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={about.heroImageUrl}
                 alt={about.title}
                 className="mb-4 w-full rounded-lg"
               />
-            )}
+            ) : null}
 
             <div className="prose prose-invert">
               {about.body.split("\n").map((para, idx) => (
@@ -34,11 +34,11 @@ export default function AboutPage({ about }: AboutProps) {
               ))}
             </div>
 
-            {about.updatedAt && (
+            {about.updatedAt ? (
               <p className="text-xs text-gray-400 mt-6">
                 Updated: {new Date(about.updatedAt).toLocaleString()}
               </p>
-            )}
+            ) : null}
           </>
         ) : (
           <p>No about information available yet.</p>
@@ -65,13 +65,9 @@ export async function getServerSideProps() {
         title: aboutDoc.title,
         body: aboutDoc.body,
         heroImageUrl: aboutDoc.heroImageUrl || null,
-        updatedAt: aboutDoc.updatedAt ? aboutDoc.updatedAt.toISOString() : null,
+        updatedAt: aboutDoc.updatedAt ? aboutDoc.updatedAt.toISOString() : null
       }
     : null;
 
-  return {
-    props: {
-      about,
-    },
-  };
+  return { props: { about } };
 }
