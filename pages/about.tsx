@@ -1,14 +1,13 @@
-import Layout from '@/components/Layout';
-import connect from '@/lib/db';
-import AboutContent from '@/lib/models/AboutContent';
-import { GetServerSidePropsContext } from 'next';
+import Layout from "@/components/Layout";
+import connect from "@/lib/db";
+import AboutContent from "@/lib/models/AboutContent";
 
 interface AboutProps {
   about: {
     title: string;
     body: string;
-    heroImageUrl?: string;
-    updatedAt?: string;
+    heroImageUrl?: string | null;
+    updatedAt?: string | null;
   } | null;
 }
 
@@ -19,6 +18,7 @@ export default function AboutPage({ about }: AboutProps) {
         {about ? (
           <>
             <h2 className="text-3xl font-bold mb-4">{about.title}</h2>
+
             {about.heroImageUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -27,11 +27,18 @@ export default function AboutPage({ about }: AboutProps) {
                 className="mb-4 w-full rounded-lg"
               />
             )}
+
             <div className="prose prose-invert">
-              {about.body.split('\n').map((para, idx) => (
+              {about.body.split("\n").map((para, idx) => (
                 <p key={idx}>{para}</p>
               ))}
             </div>
+
+            {about.updatedAt && (
+              <p className="text-xs text-gray-400 mt-6">
+                Updated: {new Date(about.updatedAt).toLocaleString()}
+              </p>
+            )}
           </>
         ) : (
           <p>No about information available yet.</p>
@@ -41,9 +48,18 @@ export default function AboutPage({ about }: AboutProps) {
   );
 }
 
-export async function getServerSideProps(context: GetServerSidePropsContext) {
+export async function getServerSideProps() {
   await connect();
-  const aboutDoc = await AboutContent.findOne().lean();
+
+  const aboutDoc = (await AboutContent.findOne().lean()) as
+    | {
+        title: string;
+        body: string;
+        heroImageUrl?: string;
+        updatedAt?: Date;
+      }
+    | null;
+
   const about = aboutDoc
     ? {
         title: aboutDoc.title,
@@ -52,6 +68,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         updatedAt: aboutDoc.updatedAt ? aboutDoc.updatedAt.toISOString() : null,
       }
     : null;
+
   return {
     props: {
       about,
