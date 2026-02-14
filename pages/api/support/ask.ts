@@ -21,6 +21,13 @@ type AboutLean = {
   heroImageUrl?: string | null;
 };
 
+type Candidate = {
+  title: string;
+  content: string;
+  keywords: string[];
+  source: "kb" | "about";
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).end();
@@ -37,27 +44,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   await connect();
 
-  // ✅ Type the lean() results so TS knows what fields exist
+  // ✅ Type the lean() results so TS knows fields exist
   const kbArticles = (await KnowledgeBaseArticle.find({ isPublished: true }).lean()) as KbLean[];
   const aboutDoc = (await AboutContent.findOne().lean()) as AboutLean | null;
 
-  type Candidate = {
-    title: string;
-    content: string;
-    keywords: string[];
-    source: string;
-  };
-
   const candidates: Candidate[] = [];
 
-  kbArticles.forEach((a) => {
+  for (const a of kbArticles) {
     candidates.push({
       title: a.title,
       content: a.content,
       keywords: a.keywords || [],
       source: "kb"
     });
-  });
+  }
 
   if (aboutDoc) {
     candidates.push({
@@ -68,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 
+  // Tokenize message into words
   const words = message
     .toLowerCase()
     .split(/\W+/)
@@ -78,13 +79,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const scored: { candidate: Candidate; score: number }[] = [];
 
-  candidates.forEach((cand) => {
+  // ✅ Use for...of so TS narrowing works (prevents "never")
+  for (const cand of candidates) {
     const text = (cand.title + " " + cand.keywords.join(" ") + " " + cand.content).toLowerCase();
     let score = 0;
 
-    words.forEach((w) => {
+    for (const w of words) {
       if (text.includes(w)) score += 1;
-    });
+    }
 
     scored.push({ candidate: cand, score });
 
@@ -92,16 +94,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       bestScore = score;
       bestCandidate = cand;
     }
-  });
+  }
 
+  // Suggestions for UI
   const suggestions = scored
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map(({ candidate }) => ({
       title: candidate.title,
-      excerpt:
-        candidate.content.substring(0, 160) + (candidate.content.length > 160 ? "…" : "")
+      excerpt: candidate.content.substring(0, 160) + (candidate.content.length > 160 ? "…" : "")
     }));
 
   let answer = "";
@@ -115,9 +117,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       bestCandidate.content.length > 300 ? "…" : ""
     }`;
 
+    // low confidence if score < 2
     if (bestScore < 2) {
-      answer +=
-        "\n\nI may not have fully answered your question. Would you like to create a support ticket?";
+      answer += "\n\nI may not have fully answered your question. Would you like to create a support ticket?";
       escalate = true;
     }
   }
@@ -126,9 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const visitorId = req.cookies["visitorId"] || "unknown";
     const sessionId = req.cookies["sessionId"] || "unknown";
-    const deviceType = req.headers["user-agent"]?.toLowerCase().includes("mobile")
-      ? "mobile"
-      : "desktop";
+    const deviceType = req.headers["user-agent"]?.toLowerCase().includes("mobile") ? "mobile" : "desktop";
 
     await (await import("@/lib/models/AnalyticsEvent")).default.create({
       type: "support_ask",
@@ -140,7 +140,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       meta: { matches: suggestions.length }
     });
   } catch {
-    // ignore
+    // ignore errors
   }
 
   return res.status(200).json({ answer, suggestions, escalate });
