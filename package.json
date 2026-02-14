@@ -16,7 +16,7 @@
     "autoprefixer": "^10.4.0",
     "postcss": "^8.4.0",
     "mongoose": "^7.4.0",
-    "iron-session": "^8.0.4",
+    "iron-session": "^7.1.2",
     "bcryptjs": "^2.4.3",
     "zod": "^3.22.4",
     "recharts": "^2.7.0",
@@ -29,4 +29,4 @@
     "eslint": "8.50.0",
     "eslint-config-next": "14.0.0"
   }
-}
+}}
