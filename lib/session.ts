@@ -1,6 +1,6 @@
 import type { SessionOptions, IronSession } from "iron-session";
 import { getIronSession } from "iron-session";
-import type { GetServerSideProps, GetServerSidePropsContext, NextApiHandler } from "next";
+import type { GetServerSideProps, GetServerSidePropsContext, NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 
 export interface SessionUser {
   id: string;
@@ -18,37 +18,24 @@ export const sessionOptions: SessionOptions = {
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
-    sameSite: "lax",
-  },
+    sameSite: "lax"
+  }
 };
 
-// API wrapper (keeps req.session.* working)
+// ✅ API wrapper
 export function withSessionRoute(handler: NextApiHandler) {
-  return async function sessionWrappedHandler(req: any, res: any) {
-    const session = (await getIronSession<SessionData>(
-      req,
-      res,
-      sessionOptions
-    )) as IronSession<SessionData>;
-
-    req.session = session;
+  return async function sessionWrappedHandler(req: NextApiRequest, res: NextApiResponse) {
+    req.session = (await getIronSession<SessionData>(req, res, sessionOptions)) as IronSession<SessionData>;
     return handler(req, res);
   };
 }
 
-// SSR wrapper (keeps ctx.req.session.* working)
-export function withSessionSsr(gssp: GetServerSideProps) {
+// ✅ SSR wrapper
+export function withSessionSsr<P extends { [key: string]: any } = { [key: string]: any }>(
+  gssp: GetServerSideProps<P>
+): GetServerSideProps<P> {
   return async function sessionWrappedGSSP(ctx: GetServerSidePropsContext) {
-    const req: any = ctx.req;
-    const res: any = ctx.res;
-
-    const session = (await getIronSession<SessionData>(
-      req,
-      res,
-      sessionOptions
-    )) as IronSession<SessionData>;
-
-    req.session = session;
+    ctx.req.session = (await getIronSession<SessionData>(ctx.req, ctx.res, sessionOptions)) as IronSession<SessionData>;
     return gssp(ctx);
   };
 }
