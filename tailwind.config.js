@@ -1,137 +1,48 @@
-import Link from "next/link";
-import React, { useState } from "react";
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./lib/**/*.{js,ts,jsx,tsx}"
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // 🔥 Core Brand Colors (from your logo)
+        brand: {
+          bg: "#05070B",        // main background (deep black)
+          panel: "#0B0F17",     // cards / sections
+          line: "rgba(255,255,255,0.10)", // subtle borders
+          orange: "#FF6A00",    // main brand orange
+          orangeLight: "#FF8A1E", // highlight orange
+          ember: "#FF3D00",     // darker flame tone
+          steel: "#AEB6C2"      // steel gray accent
+        },
 
-const NAV = [
-  { href: "/about", label: "ABOUT US" },
-  { href: "/team", label: "TEAM" },
-  { href: "/merch", label: "SHOP" },
-  { href: "/contact", label: "SUPPORT" }
-];
+        // ⚫ Neutral Dark Layers
+        dark: {
+          900: "#05070B",
+          800: "#0B0F17",
+          700: "#111827",
+          600: "#1F2937"
+        }
+      },
 
-const SOCIAL = [
-  { href: "https://discord.com", label: "DISCORD" },
-  { href: "https://twitter.com", label: "X" },
-  { href: "https://tiktok.com", label: "TIKTOK" },
-  { href: "https://twitch.tv", label: "TWITCH" }
-];
+      // 🧨 Custom Glow Utilities
+      boxShadow: {
+        glow: "0 0 25px rgba(255, 106, 0, 0.45)",
+        glowSoft: "0 0 60px rgba(255, 106, 0, 0.25)"
+      },
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="min-h-screen bg-brand-bg text-white">
-      {/* top orange line */}
-      <div className="h-[2px] bg-brand-orange" />
-
-      <header className="sticky top-0 z-50 bg-black/85 backdrop-blur border-b border-brand-line">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="h-16 flex items-center justify-between relative">
-            {/* left nav */}
-            <nav className="hidden md:flex items-center gap-8">
-              {NAV.map((i) => (
-                <Link key={i.href} href={i.href} legacyBehavior>
-                  <a className="text-xs font-extrabold tracking-[0.24em] text-brand-steel hover:text-white transition">
-                    {i.label}
-                  </a>
-                </Link>
-              ))}
-            </nav>
-
-            {/* mobile menu button */}
-            <button
-              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-brand-line bg-white/5 hover:bg-white/10 transition"
-              onClick={() => setOpen((v) => !v)}
-              aria-label="Open menu"
-            >
-              <span className="text-xl">{open ? "✕" : "☰"}</span>
-            </button>
-
-            {/* center logo */}
-            <Link href="/" legacyBehavior>
-              <a className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 select-none">
-                <div className="relative w-10 h-10 rounded-xl bg-white/5 border border-brand-line overflow-hidden">
-                  <div className="absolute inset-0 bg-brand-gradient opacity-70" />
-                  <div className="relative grid place-items-center h-full w-full font-black tracking-tight">
-                    H
-                  </div>
-                </div>
-
-                <div className="hidden sm:block leading-none">
-                  <div className="font-black tracking-tight">
-                    TheHatch<span className="text-brand-orange">GGs</span>
-                  </div>
-                  <div className="mt-1 text-[10px] tracking-[0.32em] text-white/45">
-                    ESPORTS • COMMUNITY
-                  </div>
-                </div>
-              </a>
-            </Link>
-
-            {/* right social */}
-            <div className="hidden md:flex items-center gap-5">
-              {SOCIAL.map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-semibold text-white/55 hover:text-brand-orange transition"
-                >
-                  {s.label}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* mobile menu */}
-          {open ? (
-            <div className="md:hidden pb-4">
-              <div className="mt-2 grid gap-2">
-                {NAV.map((i) => (
-                  <Link key={i.href} href={i.href} legacyBehavior>
-                    <a
-                      onClick={() => setOpen(false)}
-                      className="rounded-xl border border-brand-line bg-white/5 px-4 py-3 text-sm font-semibold tracking-wide hover:bg-white/10 transition"
-                    >
-                      {i.label}
-                    </a>
-                  </Link>
-                ))}
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {SOCIAL.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-xl border border-brand-line bg-black/40 px-3 py-2 text-xs font-semibold text-white/60 hover:text-brand-orange transition"
-                  >
-                    {s.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-10">{children}</main>
-
-      <footer className="border-t border-brand-line bg-black/60">
-        <div className="mx-auto max-w-7xl px-4 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="text-sm text-white/55">
-            © {new Date().getFullYear()} TheHatchGGs
-          </div>
-          <div className="text-sm text-white/55">
-            Support:{" "}
-            <a className="text-white hover:text-brand-orange transition" href="mailto:support@thehatch.store">
-              support@thehatch.store
-            </a>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
+      // 🔥 Gradient presets
+      backgroundImage: {
+        "brand-gradient":
+          "linear-gradient(135deg, #FF6A00 0%, #FF8A1E 40%, transparent 100%)",
+        "brand-radial":
+          "radial-gradient(circle at center, rgba(255,106,0,0.35), transparent 70%)"
+      }
+    }
+  },
+  plugins: []
+};
