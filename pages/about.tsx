@@ -11,61 +11,60 @@ interface AboutProps {
   } | null;
 }
 
+type AboutLean = {
+  title: string;
+  body: string;
+  heroImageUrl?: string | null;
+  updatedAt?: Date;
+};
+
 export default function AboutPage({ about }: AboutProps) {
   return (
     <Layout>
-      <section className="max-w-3xl mx-auto py-8">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
         {about ? (
           <>
-            <h2 className="text-3xl font-bold mb-4">{about.title}</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{about.title}</h2>
 
             {about.heroImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={about.heroImageUrl}
                 alt={about.title}
-                className="mb-4 w-full rounded-lg"
+                className="mt-6 w-full max-h-[420px] object-cover rounded-2xl border border-white/10"
               />
             ) : null}
 
-            <div className="prose prose-invert">
-              {about.body.split("\n").map((para, idx) => (
+            <div className="mt-6 space-y-4 text-white/80 leading-relaxed">
+              {about.body.split("\n").filter(Boolean).map((para, idx) => (
                 <p key={idx}>{para}</p>
               ))}
             </div>
 
             {about.updatedAt ? (
-              <p className="text-xs text-gray-400 mt-6">
+              <p className="mt-6 text-xs text-white/50">
                 Updated: {new Date(about.updatedAt).toLocaleString()}
               </p>
             ) : null}
           </>
         ) : (
-          <p>No about information available yet.</p>
+          <p className="text-white/70">No about information available yet.</p>
         )}
-      </section>
+      </div>
     </Layout>
   );
 }
 
 export async function getServerSideProps() {
   await connect();
+  const doc = (await AboutContent.findOne().lean()) as AboutLean | null;
 
-  const aboutDoc = (await AboutContent.findOne().lean()) as
-    | {
-        title: string;
-        body: string;
-        heroImageUrl?: string;
-        updatedAt?: Date;
-      }
-    | null;
-
-  const about = aboutDoc
+  const about = doc
     ? {
-        title: aboutDoc.title,
-        body: aboutDoc.body,
-        heroImageUrl: aboutDoc.heroImageUrl || null,
-        updatedAt: aboutDoc.updatedAt ? aboutDoc.updatedAt.toISOString() : null
+        title: doc.title,
+        body: doc.body,
+        heroImageUrl: doc.heroImageUrl ?? null,
+        updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : null,
       }
     : null;
 
